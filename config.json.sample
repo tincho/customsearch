@@ -1,0 +1,8 @@
+{
+    "db_user": "user",
+    "db_password": "pwd",
+    "db_name": "myDb",
+    "db_table": "table",
+    "search_fields": ["title", "body"],
+    "display_fields": ["id", "title", "link"]
+}
