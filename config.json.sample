@@ -1,6 +1,4 @@
 {
-    "listen_on": 3000,
-
     "db_user": "user",
     "db_password": "pwd",
     "db_host": "localhost",

@@ -9,27 +9,45 @@
     <meta name="ROBOTS" content="NOINDEX">
     <script src="repeater/cloner.js" type="text/javascript"></script>
     <script src="repeater/repeater.js" type="text/javascript"></script>
-    <script src="setup.js" type="text/javascript"></script>
+    <script src="configure.js" type="text/javascript"></script>
     <!-- <link rel="stylesheet" href="styles.css"> -->
+    <style type="text/css">
+    input {
+        clear: both;
+        display: block;
+    }
+    </style>
 </head>
 
 <body>
 
     <div class="container">
-        <form action="/setup/save" method="post">
+        <form action="/configure/save" method="post">
 
+            <label>DB User</label>
             <input name="db_user">
+
+            <label>DB Password</label>
             <input name="db_password">
-            <input name="db_host">
+
+            <label>DB Name</label>
             <input name="db_name">
+
+            <label>DB Table</label>
             <input name="db_table">
-            <input name="db_driver">
+
+            <label>DB Host</label>
+            <input name="db_host" value="localhost">
+
+            <label>DB Driver</label>
+            <input name="db_driver" value="mysql">
 
             <hr>
 
             <label>Search Fields: </label>
             <select name="search_fields" multiple>
                 <option>{{#}}</option>
+                <option value="$all">All</option>
             </select>
 
             <hr>
@@ -37,12 +55,14 @@
             <label>Display Fields: </label>
             <select name="display_fields" multiple>
                 <option>{{#}}</option>
+                <option value="$all">All</option>
             </select>
 
             <button type="submit">Save</button>
         </form>
     </div>
 </body>
-
-
+<script type="text/javascript">
+document.querySelector("form").addEventListener("submit", generateConfig);
+</script>
 </html>

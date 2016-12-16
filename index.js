@@ -3,6 +3,7 @@ var Sequelize  = require('sequelize');
 var _          = Sequelize.Utils._;
 var config     = require('./config');
 var bodyParser = require('body-parser');
+var fs         = require('fs');
 
 var sequelize = new Sequelize(config.db_name, config.db_user, config.db_password, {
   host: config.db_host,
@@ -27,14 +28,19 @@ function init() {
 
     app.get("/search", HandleSearch);
     app.get("/columns", (req, res) => res.json(tableColumns));
-    app.use("/setup", express.static("setup"));
+    app.use("/configure", express.static("configure"));
     app.use(bodyParser.urlencoded({ extended: false }));
     app.use(bodyParser.json());
-    app.post("/setup/save", function(req, res) {
-        console.log(req.body);
-        res.json({});
+    app.post("/configure/save", function(req, res) {
+        fs.writeFile("config.json.generated", JSON.stringify(req.body), function(err) {
+            if(err) {
+                return console.log(err);
+            }
+            console.log("The file was saved!");
+        });
+        res.json(req.body);
     });
-    app.listen(config.listen_on);
+    app.listen(process.env.PORT || 3000);
 }
 
 function HandleSearch(req, res) {

@@ -1,4 +1,5 @@
-document.addEventListener("DOMContentLoaded", getData.bind(null, '/columns', updateColumns));
+var getColumns = getData.bind(null, '/columns', updateColumns);
+document.addEventListener("DOMContentLoaded", getColumns);
 
 function getData(uri, success, evt) {
 
