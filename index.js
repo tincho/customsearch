@@ -10,11 +10,13 @@ var sequelize = new Sequelize(config.db_name, config.db_user, config.db_password
 var Model = sequelize.define(config.db_table);
 
 var searchFields = config.search_fields;
+var tableColumns = [];
 Model.describe().then(function(cols) {
-    searchFields = Object.keys(cols);
+    tableColumns = Object.keys(cols);
+    searchFields = tableColumns;
     if (config.search_fields !== '$all') {
         // this is to avoid querying unexisting columns
-        searchFields = _.intersection(searchFields, config.search_fields);
+        searchFields = _.intersection(tableColumns, config.search_fields);
     }
     init();
 });
