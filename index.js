@@ -8,18 +8,17 @@ var sequelize = new Sequelize(config.db_name, config.db_user, config.db_password
 
 
 var app = express();
-app.get("/", function(req, res) {
+app.get("/search", function(req, res) {
 
-    // < request:
-    var data = {
-        q: 'pan integral',
-        full: false,
-        all: false
+    var defaults = {
+        q: undefined, // the term search
+        full: false, // match the whole term without splitting words
+        all: false // match each and every word, if not matching full obviously
     };
-    // >
+    var data = Object.assign(defaults, req.query);
     var matchFullTerm = data.full;
     var matchAllTerms = data.all;
-    var terms = (matchFullTerm) ? [q] : q.replace(/\s+/g, ' ').split(' ');
+    var terms = (matchFullTerm) ? [data.q] : data.q.replace(/\s+/g, ' ').split(' ');
 
     var comparers = terms.map($likeMaker);
     var inclusionType = ['$or', '$and'][+matchAllTerms];
