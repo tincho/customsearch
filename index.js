@@ -1,26 +1,31 @@
 var express   = require("express");
 var Sequelize = require('sequelize');
+var _         = Sequelize.Utils._;
 var config    = require('./config');
 
 var sequelize = new Sequelize(config.db_name, config.db_user, config.db_password, {
-  host: 'localhost',
-  dialect: 'mysql',
+  host: config.db_host,
+  dialect: config.db_driver
 });
+var Model = sequelize.define(config.db_table);
 
 var searchFields = config.search_fields;
-if (config.search_fields === '$all') {
-    sequelize.define(config.db_table).describe().then(function(cols) {
-        searchFields = Object.keys(cols));
+Model.describe().then(function(cols) {
+    searchFields = Object.keys(cols);
+    if (config.search_fields !== '$all') {
+        // this is to avoid querying unexisting columns
+        searchFields = _.intersection(searchFields, config.search_fields);
+    }
+    init();
+});
 
-        // hacer el listen acá ?
-    });
+function init() {
+    var app = express();
+    app.get("/search", HandleSearch);
+    app.listen(config.listen_on);
 }
 
-var app = express();
-app.get("/search", get_search);
-app.listen(config.listen_on);
-
-function get_search(req, res) {
+function HandleSearch(req, res) {
 
     var defaults = {
         q: undefined, // the term search
@@ -28,18 +33,18 @@ function get_search(req, res) {
         all: false // match each and every word, if not matching full obviously
     };
     var data = Object.assign(defaults, req.query);
-    var matchFullTerm = data.full;
-    var matchAllTerms = data.all;
+    var matchFullTerm = !!data.full;
+    var matchAllTerms = !!data.all;
     var terms = (matchFullTerm) ? [data.q] : data.q.replace(/\s+/g, ' ').split(' ');
 
     var conditions = {
         '$or': searchFields.map(fieldConditionsMaker, {
             "conditions": terms.map($likeMaker),
-            "inclusionType": ['$or', '$and'][+!!matchAllTerms]
+            "inclusionType": ['$or', '$and'][+matchAllTerms]
         })
     };
 
-    sequelize.define(config.db_table).findAll({
+    Model.findAll({
         attributes: config.display_fields,
         where: conditions,
         raw: true
@@ -47,6 +52,20 @@ function get_search(req, res) {
 
 };
 
+/**
+ * wraps string with given chars if not already wrapped
+ */
+String.prototype.wrap = function(begin, end) {
+    end = end || begin;
+    return this
+        .replace(new RegExp("^([^\\"+begin+"])"),  begin + "$1")
+        .replace(new RegExp( "([^\\"+ end +"])$"), "$1" + end);
+};
+
+/**
+ * @see ES6 computed property names in object literal definition
+ * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Object_initializer
+ */
 function fieldConditionsMaker(field) {
     return {
         [field]: {
@@ -55,7 +74,6 @@ function fieldConditionsMaker(field) {
     };
 };
 
-
 function $likeMaker(term) {
-    return {'$like': '%'+term+'%'};
+    return {'$like': term.wrap('%')};
 };

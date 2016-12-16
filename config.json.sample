@@ -1,9 +1,13 @@
 {
     "listen_on": 3000,
+
     "db_user": "user",
     "db_password": "pwd",
+    "db_host": "localhost",
     "db_name": "myDb",
     "db_table": "table",
-    "search_fields": ["title", "body"],
+    "db_driver": "mysql",
+
+    "search_fields": ["title", "body"], // use "$all" to search in all columns
     "display_fields": ["id", "title", "link"]
 }
