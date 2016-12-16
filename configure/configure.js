@@ -12,7 +12,6 @@ function getData(uri, success, evt) {
         }
         return success(request.responseText);
     }
-    // disparo finalmente que el request al backend
     request.send();
 }
 
