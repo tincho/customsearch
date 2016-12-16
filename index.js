@@ -1,7 +1,8 @@
-var express   = require("express");
-var Sequelize = require('sequelize');
-var _         = Sequelize.Utils._;
-var config    = require('./config');
+var express    = require("express");
+var Sequelize  = require('sequelize');
+var _          = Sequelize.Utils._;
+var config     = require('./config');
+var bodyParser = require('body-parser');
 
 var sequelize = new Sequelize(config.db_name, config.db_user, config.db_password, {
   host: config.db_host,
@@ -23,7 +24,16 @@ Model.describe().then(function(cols) {
 
 function init() {
     var app = express();
+
     app.get("/search", HandleSearch);
+    app.get("/columns", (req, res) => res.json(tableColumns));
+    app.use("/setup", express.static("setup"));
+    app.use(bodyParser.urlencoded({ extended: false }));
+    app.use(bodyParser.json());
+    app.post("/setup/save", function(req, res) {
+        console.log(req.body);
+        res.json({});
+    });
     app.listen(config.listen_on);
 }
 

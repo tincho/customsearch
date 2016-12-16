@@ -2,6 +2,7 @@
   "name": "customsearch",
   "version": "0.0.1",
   "dependencies": {
+    "body-parser": "^1.15.2",
     "express": "^4.10.6",
     "mysql": "^2.5.4",
     "sequelize": "^3.27.0"
