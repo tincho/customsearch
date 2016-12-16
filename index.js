@@ -22,13 +22,15 @@ app.get("/search", function(req, res) {
 
     var comparers = terms.map($likeMaker);
     var inclusionType = ['$or', '$and'][+matchAllTerms];
-    var conditions = { '$or': [] };
-    config.search_fields.forEach(function(field) {
-        var condition = {};
-        condition[field] = {};
-        condition[field][inclusionType] = comparers;
-        conditions['$or'].push(condition);
-    });
+    var conditions = {
+        '$or': config.search_fields.map(function(field) {
+            var condition = {};
+            condition[field] = {};
+            condition[field][inclusionType] = comparers;
+            return condition;
+        })
+    };
+
     var Model = sequelize.define(config.db_table);
     Model.findAll({
         attributes: config.display_fields,
