@@ -1,3 +1,10 @@
+/**
+ * simple query tool for relational databases relying on Sequelize ORM
+ * a config.json file must provide data source info such as db connection,
+ * table containing data, where to search and what to return
+ * use via /search?q=terms%20to%20search&type=any|all|full (leave empty for "any")
+ */
+
 var express    = require("express");
 var Sequelize  = require('sequelize');
 var _          = Sequelize.Utils._;
@@ -27,7 +34,11 @@ function init() {
     var app = express();
 
     app.get("/search", HandleSearch);
+
     app.get("/columns", (req, res) => res.json(tableColumns));
+    app.use("/demo", express.static("demo"));
+
+    // @TODO deprecate web interface for CLI prompt!
     app.use("/configure", express.static("configure"));
     app.use(bodyParser.urlencoded({ extended: false }));
     app.use(bodyParser.json());
@@ -40,32 +51,34 @@ function init() {
         });
         res.json(req.body);
     });
+
     app.listen(process.env.PORT || 3000);
 }
 
 function HandleSearch(req, res) {
 
     var defaults = {
-        q: undefined, // the term search
-        full: false, // match the whole term without splitting words
-        all: false // match each and every word, if not matching full obviously
+        q: undefined, // the search term
+        type: 'any'
+        // 'any' match any of the specified words. DEFAULT OPTION
+        // 'all' : match each and every word but may be separate
+        // 'full' : match the whole term without splitting words
     };
     var data = Object.assign(defaults, req.query);
-    var matchFullTerm = !!data.full;
-    var matchAllTerms = !!data.all;
-    var terms = (matchFullTerm) ? [data.q] : data.q.replace(/\s+/g, ' ').split(' ');
+    var terms = (data.type === 'full') ? [data.q] : data.q.replace(/\s+/g, ' ').split(' ');
 
     var conditions = {
         '$or': searchFields.map(fieldConditionsMaker, {
             "conditions": terms.map($likeMaker),
-            "inclusionType": ['$or', '$and'][+matchAllTerms]
+            "conditionType": ['$or', '$and'][+(data.type === 'all')]
         })
     };
 
     Model.findAll({
         attributes: config.display_fields,
         where: conditions,
-        raw: true
+        raw: true,
+        limit: 148 // @TODO paginatioN!!!!!
     }).then(res.json.bind(res));
 
 };
@@ -75,9 +88,7 @@ function HandleSearch(req, res) {
  */
 String.prototype.wrap = function(begin, end) {
     end = end || begin;
-    return this
-        .replace(new RegExp("^([^\\"+begin+"])"),  begin + "$1")
-        .replace(new RegExp( "([^\\"+ end +"])$"), "$1" + end);
+    return begin+this+end;
 };
 
 /**
@@ -87,7 +98,7 @@ String.prototype.wrap = function(begin, end) {
 function fieldConditionsMaker(field) {
     return {
         [field]: {
-            [this.inclusionType]: this.conditions
+            [this.conditionType]: this.conditions
         }
     };
 };
