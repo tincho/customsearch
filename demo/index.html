@@ -52,8 +52,9 @@
 var $ = document.querySelector.bind(document);
 $("#searchForm").addEventListener("submit", function(evt) {
     evt.preventDefault();
-    var url = this.action + '?q=' + $("input[name=q]").value + '&type=' + $("input[name=type]:checked").value;
-    getData(url, function(data) {
+    var q = $("input[name=q]").value;
+    var type = $("input[name=type]:checked").value;
+    getData(this.action + '?q=' + q + '&type=' + type, function(data) {
         $("#debug pre").innerText = data;
     });
     return false;
