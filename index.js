@@ -38,20 +38,6 @@ function init() {
     app.get("/columns", (req, res) => res.json(tableColumns));
     app.use("/demo", express.static("demo"));
 
-    // @TODO deprecate web interface for CLI prompt!
-    app.use("/configure", express.static("configure"));
-    app.use(bodyParser.urlencoded({ extended: false }));
-    app.use(bodyParser.json());
-    app.post("/configure/save", function(req, res) {
-        fs.writeFile("config.json.generated", JSON.stringify(req.body), function(err) {
-            if(err) {
-                return console.log(err);
-            }
-            console.log("The file was saved!");
-        });
-        res.json(req.body);
-    });
-
     app.listen(process.env.PORT || 3000);
 }
 
