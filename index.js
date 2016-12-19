@@ -18,22 +18,19 @@ var sequelize = new Sequelize(config.db_name, config.db_user, config.db_password
 });
 var Model = sequelize.define(config.db_table);
 
-var searchFields = config.search_fields;
-var tableColumns = [];
-Model.describe().then(function(cols) {
-    tableColumns = Object.keys(cols);
-    searchFields = tableColumns;
-    if (config.search_fields !== '$all') {
-        // this is to avoid querying unexisting columns
-        searchFields = _.intersection(tableColumns, config.search_fields);
-    }
-    init();
-});
+// @see _.flow! "compose"-like functional utility
+Model.describe().then(_.flow(Object.keys, init));
 
-function init() {
+function init(tableColumns) {
+    // avoid querying unexisting columns
+    var searchFields  = (config.search_fields  === '*') ? tableColumns : _.intersection(tableColumns, config.search_fields);
+    var displayFields = (config.display_fields === '*') ? '*' : _.intersection(tableColumns, config.display_fields);
+
     var app = express();
-
-    app.get("/search", HandleSearch);
+    app.get("/search", HandleSearch.bind({
+        searchFields: searchFields,
+        displayFields: displayFields
+    }));
 
     app.get("/columns", (req, res) => res.json(tableColumns));
     app.use("/demo", express.static("demo"));
@@ -54,14 +51,14 @@ function HandleSearch(req, res) {
     var terms = (data.type === 'full') ? [data.q] : data.q.replace(/\s+/g, ' ').split(' ');
 
     var conditions = {
-        '$or': searchFields.map(fieldConditionsMaker, {
+        '$or': this.searchFields.map(fieldConditionsMaker, {
             "conditions": terms.map($likeMaker),
             "conditionType": ['$or', '$and'][+(data.type === 'all')]
         })
     };
 
     Model.findAll({
-        attributes: config.display_fields,
+        attributes: this.displayFields,
         where: conditions,
         raw: true,
         limit: 148 // @TODO paginatioN!!!!!

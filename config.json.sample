@@ -6,6 +6,6 @@
     "db_table": "table",
     "db_driver": "mysql",
 
-    "search_fields": ["title", "body"], // use "$all" to search in all columns
-    "display_fields": ["id", "title", "link"]
+    "search_fields": ["title", "body"], // use "*" to search in all columns
+    "display_fields": ["id", "title", "link"] // use "*" to return all columns
 }
