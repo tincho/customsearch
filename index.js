@@ -24,7 +24,7 @@ Model.describe().then(_.flow(Object.keys, init));
 function init(tableColumns) {
     // avoid querying unexisting columns
     var searchFields  = (config.search_fields  === '*') ? tableColumns : _.intersection(tableColumns, config.search_fields);
-    var displayFields = (config.display_fields === '*') ? '*' : _.intersection(tableColumns, config.display_fields);
+    var displayFields = (config.display_fields === '*') ? tableColumns : _.intersection(tableColumns, config.display_fields);
 
     var app = express();
     app.get("/search", HandleSearch.bind({
@@ -33,6 +33,7 @@ function init(tableColumns) {
     }));
 
     app.get("/columns", (req, res) => res.json(tableColumns));
+    app.get("/columns/selected", (req, res) => res.json(displayFields));
     app.use("/demo", express.static("demo"));
 
     app.listen(process.env.PORT || 3000);
