@@ -23,9 +23,9 @@ if no port specified will listen on 3000
 
 ## Endpoints
 
-* http://localhost/search?q=term&type=any|all|full
-* http://localhost/columns
-* http://localhost/demo
+* http://localhost:3000/search?q=term&type=any|all|full
+* http://localhost:3000/columns
+* http://localhost:3000/demo
 
 
 # Configure
