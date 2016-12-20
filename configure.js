@@ -8,12 +8,15 @@ var outputFile = "config.json.generated";
 var config = {
     db_driver: "mysql"
 };
-_.assign(config, promptBasicAuth());
+var assignToConfig = _.partial(_.assign, config);
+var writeFileCallback = (err) => ((err) ? console.log(err) : console.log("Config saved to " + outputFile));
+assignToConfig(promptBasicAuth());
 
 var sequelize = new Sequelize(config.db_name, config.db_user, config.db_password, {
   host: config.db_host,
   dialect: config.db_driver
 });
+
 
 sequelize.showAllSchemas().then(
     _.flow(
@@ -21,10 +24,10 @@ sequelize.showAllSchemas().then(
         _.method('map', _.flow(_.values, _.first)),
         promptTable,
         // once i get the answer set it to global var config
-        _.partial(_.assign, config),
+        assignToConfig,
         // and get it from there (config)
         _.flow(
-            _.partial(_.get, _, "db_table"),
+            _.property("db_table"),
             // to run sequelize.define(config.db_table)
             _.bind(sequelize.define, sequelize),
             // and get its columns
@@ -36,13 +39,11 @@ sequelize.showAllSchemas().then(
                     Object.keys,
                     // print them and ask to select search and display fields
                     promptFields,
-                    // again result is set to config
-                    _.partial(_.assign, config),
+                    assignToConfig,
+                    // finally save it stringified in outputFile
                     _.flow(
                         JSON.stringify,
-                        _.partial(fs.writeFile, outputFile, _,
-                            (err) => ((err) ? console.log(err) : console.log("Config saved to " + outputFile))
-                        )
+                        _.partial(fs.writeFile, outputFile, _, writeFileCallback)
                     )
                 )
             )
@@ -71,9 +72,13 @@ function promptTable(tables) {
 };
 
 function promptFields(fields) {
+    console.log("---------------------------");
     console.log('Columns are: ' + fields.join(', '));
+    console.log("---------------------------");
     var searchFields  = readlineSync.question('Columns to search in (separated by "," or leave empty for all): ', { defaultInput: '*' });
+    console.log("---------------------------");
     var displayFields = readlineSync.question('Columns to return (separated by "," or leave empty for all): ', { defaultInput: '*' });
+    console.log("---------------------------");
     return {
         search_fields:  (searchFields  !== '*') ?  searchFields.replace(' ', '').split(',') : searchFields,
         display_fields: (displayFields !== '*') ? displayFields.replace(' ', '').split(',') : displayFields,
