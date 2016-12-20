@@ -53,10 +53,10 @@ sequelize.showAllSchemas().then(
 function promptBasicAuth() {
     console.log('Please provide DB connection data. Only MySQL supported by now \n');
     var questions = {
-        "db_name"     : { label: "DB name: " },
         "db_host"     : { label: "Host (empty: $<defaultInput>): ", options: { defaultInput: "localhost" } },
         "db_user"     : { label: "Username: " },
-        "db_password" : { label: "Password: ", options: { hideEchoBack: true } }
+        "db_password" : { label: "Password: ", options: { hideEchoBack: true } },
+        "db_name"     : { label: "DB name: " }
     };
     return  _.reduce(questions, function(answers, question, key) {
         answers[key] = readlineSync.question(question.label, question.options || undefined);

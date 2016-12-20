@@ -10,7 +10,7 @@ Originally I developed it for personal use but it might be useful to someone els
 $ npm install
 ```
 
-~~Will automatically run ./configure/cli, which asks for connection data, database name, table, fields to search and fields to return.~~ (not yet!)
+Will automatically run ./configure/cli, which asks for connection data, database name, table, fields to search and fields to return
 
 
 # Use
@@ -29,8 +29,6 @@ if no port specified will listen on 3000
 
 
 # Configure
-
-**Not implemented yet!**
 
 Run ./configure/cli, then copy config.json.generated to config.json
 
