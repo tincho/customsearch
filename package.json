@@ -5,6 +5,7 @@
     "body-parser": "^1.15.2",
     "express": "^4.10.6",
     "mysql": "^2.5.4",
+    "readline-sync": "^1.4.5",
     "sequelize": "^3.27.0"
   }
 }
