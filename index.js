@@ -42,11 +42,13 @@ function init(tableColumns) {
 function HandleSearch(req, res) {
 
     var defaults = {
-        q: undefined, // the search term
-        type: 'any'
+        q: undefined // the search term
+        , type: 'any'
         // 'any' match any of the specified words. DEFAULT OPTION
         // 'all' : match each and every word but may be separate
         // 'full' : match the whole term without splitting words
+        , limit: 148
+        , offset: 0
     };
     var data = Object.assign(defaults, req.query);
     var terms = (data.type === 'full') ? [data.q] : data.q.replace(/\s+/g, ' ').split(' ');
@@ -62,7 +64,8 @@ function HandleSearch(req, res) {
         attributes: this.displayFields,
         where: conditions,
         raw: true,
-        limit: 148 // @TODO paginatioN!!!!!
+        limit: parseInt(data.limit, 10),
+        offset: parseInt(data.offset, 10)
     }).then(res.json.bind(res));
 
 };
