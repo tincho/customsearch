@@ -10,6 +10,7 @@ var writeFile    = require('fs').writeFile;
 var outputFile = "config.json.generated";
 var writeFileCallback = err => err ? console.log(err) :
     console.log(`Config saved to ${outputFile}. Rename to config.json to use this setup`);
+var writeStringToFile = _.partial(writeFile, outputFile, _, writeFileCallback);
 
 var config = {
     db_driver: "mysql"
@@ -46,7 +47,7 @@ sequelize.showAllSchemas().then(
                 assignToConfig,
                 // finally save it stringified in outputFile
                 JSON.stringify,
-                _.partial(writeFile, outputFile, _, writeFileCallback)
+                writeStringToFile
             )
         )
     )
