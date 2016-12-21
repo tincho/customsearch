@@ -31,26 +31,22 @@ sequelize.showAllSchemas().then(
         // once i get the answer set it to global var config
         assignToConfig,
         // and get it from there (config)
-        _.flow(
-            _.property("db_table"),
-            // to run sequelize.define(config.db_table)
-            _.bind(sequelize.define, sequelize),
-            // and get its columns
-            _.method('describe'),
-            // which returns a promise so we call promise.then( fn )
-            _.method('then',
-                _.flow(
-                    // promise result is an object whose keys are the fields array
-                    Object.keys,
-                    // print them and ask to select search and display fields
-                    promptFields,
-                    assignToConfig,
-                    // finally save it stringified in outputFile
-                    _.flow(
-                        JSON.stringify,
-                        _.partial(writeFile, outputFile, _, writeFileCallback)
-                    )
-                )
+        _.property("db_table"),
+        // to run sequelize.define(config.db_table)
+        _.bind(sequelize.define, sequelize),
+        // and get its columns
+        _.method('describe'),
+        // which returns a promise so we call promise.then( fn )
+        _.method('then',
+            _.flow(
+                // promise result is an object whose keys are the fields array
+                Object.keys,
+                // print them and ask to select search and display fields
+                promptFields,
+                assignToConfig,
+                // finally save it stringified in outputFile
+                JSON.stringify,
+                _.partial(writeFile, outputFile, _, writeFileCallback)
             )
         )
     )
