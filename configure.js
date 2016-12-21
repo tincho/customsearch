@@ -1,22 +1,27 @@
+console.log("---------------------------");
+console.log("Configuring customsearch");
+console.log("---------------------------");
+
 var readlineSync = require('readline-sync');
 var Sequelize    = require('sequelize');
 var _            = Sequelize.Utils._; // give thanks and praises, hail to the _!
-var fs           = require('fs');
+var writeFile    = require('fs').writeFile;
 
 var outputFile = "config.json.generated";
+var writeFileCallback = (err) => ((err) ? console.log(err) :
+    console.log("Config saved to " + outputFile + ". Rename to config.json to use this setup"));
 
 var config = {
     db_driver: "mysql"
 };
 var assignToConfig = _.partial(_.assign, config);
-var writeFileCallback = (err) => ((err) ? console.log(err) : console.log("Config saved to " + outputFile));
+
 assignToConfig(promptBasicAuth());
 
 var sequelize = new Sequelize(config.db_name, config.db_user, config.db_password, {
   host: config.db_host,
   dialect: config.db_driver
 });
-
 
 sequelize.showAllSchemas().then(
     _.flow(
@@ -43,7 +48,7 @@ sequelize.showAllSchemas().then(
                     // finally save it stringified in outputFile
                     _.flow(
                         JSON.stringify,
-                        _.partial(fs.writeFile, outputFile, _, writeFileCallback)
+                        _.partial(writeFile, outputFile, _, writeFileCallback)
                     )
                 )
             )
