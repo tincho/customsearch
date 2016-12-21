@@ -8,8 +8,8 @@ var _            = Sequelize.Utils._; // give thanks and praises, hail to the _!
 var writeFile    = require('fs').writeFile;
 
 var outputFile = "config.json.generated";
-var writeFileCallback = (err) => ((err) ? console.log(err) :
-    console.log("Config saved to " + outputFile + ". Rename to config.json to use this setup"));
+var writeFileCallback = err => err ? console.log(err) :
+    console.log(`Config saved to ${outputFile}. Rename to config.json to use this setup`);
 
 var config = {
     db_driver: "mysql"
