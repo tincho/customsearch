@@ -7,8 +7,7 @@
     <meta name="description" content="">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="ROBOTS" content="NOINDEX">
-    <script src="demo.js" type="text/javascript"></script>
-    <!-- <link rel="stylesheet" href="styles.css"> -->
+    <script type="text/javascript" src="https://cdn.rawgit.com/tincho/64645b384a23e57f326491eb4007d856/raw/9e0554a6dd3c5eb3418498e5b58356e4bd972bf1/getData.js"></script>
     <style type="text/css">
     input {
         clear: both;
@@ -55,7 +54,7 @@ $("#searchForm").addEventListener("submit", function(evt) {
     var q = $("input[name=q]").value;
     var type = $("input[name=type]:checked").value;
     getData(this.action + '?q=' + q + '&type=' + type, function(data) {
-        $("#debug pre").innerText = data;
+        $("#debug pre").innerText = data.responseText;
     });
     return false;
 })

@@ -7,7 +7,7 @@
 
 var express    = require("express");
 var bodyParser = require('body-parser');
-var initSearch = require('./src/search');
+var initSearch = require('./search');
 
 var app = express();
 initSearch.then(function(search) {
