@@ -7,10 +7,12 @@
 
 var express    = require("express");
 var bodyParser = require('body-parser');
-var initSearch = require('./search');
+var config     = require('./config');
+var _search    = require('./search');
 
 var app = express();
-initSearch.then(function(search) {
+
+_search.init(config).then(function(search) {
     app.get("/search", function(req, res) {
         search.get_search(req.query).then(res.json.bind(res));
     });
