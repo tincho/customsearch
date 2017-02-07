@@ -72,7 +72,6 @@ String.prototype.wrap = function(begin, end) {
             limit: parseInt(data.limit, 10),
             offset: parseInt(data.offset, 10)
         });
-
     }
 
     /**
@@ -91,22 +90,19 @@ String.prototype.wrap = function(begin, end) {
         return {'$like': term.wrap('%')};
     }
 
-    var dbh;
-    module.exports = {
-        init: function(config) {
-            dbh = new Sequelize(config.db_name, config.db_user, config.db_password, {
-                host: config.db_host,
-                dialect: config.db_driver
-            });
-            Model = dbh.define(config.db_table);
-            return new Promise(function(resolve) {
-                Model.describe().then(
-                    _.flow(
-                        _.partial(exposeAPI, config),
-                        resolve
-                    ));
-            });
-        }
-    };
+    exports.init = function init(config) {
+        var dbh = new Sequelize(config.db_name, config.db_user, config.db_password, {
+            host: config.db_host,
+            dialect: config.db_driver
+        });
+        Model = dbh.define(config.db_table);
+        return new Promise(function(resolve) {
+            Model.describe().then(
+                _.flow(
+                    _.partial(exposeAPI, config),
+                    resolve
+                ));
+        });
+    }
 
 })();
