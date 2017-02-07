@@ -58,17 +58,16 @@ String.prototype.wrap = function(begin, end) {
         };
         var data = Object.assign(defaults, query);
         var terms = (data.type === 'full') ? [data.q] : data.q.replace(/\s+/g, ' ').split(' ');
+        var fieldConditionsType = (data.type === 'all') ? '$and' : '$or';
 
-        var conditions = {
-            '$or': this.searchFields.map(fieldConditionsMaker, {
-                "conditions": terms.map($likeMaker),
-                "conditionType": ['$or', '$and'][+(data.type === 'all')]
-            })
-        };
+        var mkConditionObjForThisSearch = _.partial(mkConditionObj, fieldConditionsType, terms.map(mkLikeObj));
+        var fieldsConditionList = this.searchFields.map(mkConditionObjForThisSearch);
 
         return Model.findAll({
             attributes: this.displayFields,
-            where: conditions,
+            where: {
+                '$or': fieldsConditionList
+            },
             raw: true,
             limit: parseInt(data.limit, 10),
             offset: parseInt(data.offset, 10)
@@ -80,15 +79,15 @@ String.prototype.wrap = function(begin, end) {
      * @see ES6 computed property names in object literal definition
      * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Object_initializer
      */
-    function fieldConditionsMaker(field) {
+    function mkConditionObj(conditionType, conditions, field) {
         return {
             [field]: {
-                [this.conditionType]: this.conditions
+                [conditionType]: conditions
             }
         };
     }
 
-    function $likeMaker(term) {
+    function mkLikeObj(term) {
         return {'$like': term.wrap('%')};
     }
 
