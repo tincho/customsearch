@@ -8,11 +8,11 @@
 var express    = require("express");
 var bodyParser = require('body-parser');
 var config     = require('./config');
-var _search    = require('./search');
+var Search     = require('./search');
 
 var app = express();
 
-_search.init(config).then(function(search) {
+Search.init(config).then(function(search) {
     app.get("/search", function(req, res) {
         search.get_search(req.query).then(res.json.bind(res));
     });

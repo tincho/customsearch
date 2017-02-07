@@ -1,6 +1,6 @@
 /**
- * @usage _search = require('search')
- * _search.init(config_obj).then(function(search) {
+ * @usage Search = require('search')
+ * Search.init(config_obj).then(function(search) {
         search.get_search()
     })
  * config_obj = {
