@@ -9,7 +9,7 @@
     "sequelize": "^3.27.0"
   },
   "scripts": {
-      "start": "node index.js",
+      "start": "node server.js",
       "postinstall": "node configure.js"
   }
 }

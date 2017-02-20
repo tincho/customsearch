@@ -5,6 +5,8 @@
  * use via /search?q=terms%20to%20search&type=any|all|full (leave empty for "any")
  */
 
+'use strict';
+
 var express    = require("express");
 var bodyParser = require('body-parser');
 var config     = require('./config');
