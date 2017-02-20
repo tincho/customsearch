@@ -5,12 +5,16 @@
  * use via /search?q=terms%20to%20search&type=any|all|full (leave empty for "any")
  */
 
+'use strict';
+
 var express    = require("express");
 var bodyParser = require('body-parser');
-var initSearch = require('./search');
+var config     = require('./config');
+var Search     = require('./search');
 
 var app = express();
-initSearch.then(function(search) {
+
+Search.init(config).then(function(search) {
     app.get("/search", function(req, res) {
         search.get_search(req.query).then(res.json.bind(res));
     });
