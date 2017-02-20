@@ -4,6 +4,8 @@ Generates big SQL query with tons of: ```a LIKE "%something%" OR b LIKE "%someth
 
 Originally I developed it for personal use but it might be useful to someone else.
 
+**Soon** will be publishing the search module separate from the server for the HTTP interface
+
 # Install
 
 ```
@@ -16,7 +18,7 @@ Will automatically run configure.js, which asks for connection data, database na
 # Use
 
 ```
-$ PORT=4444 node index.js
+$ PORT=4444 npm start
 ```
 
 if no port specified will listen on 3000
