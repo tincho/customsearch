@@ -1,19 +1,16 @@
 /**
- * @usage Search = require('search')
- * Search.init(config_obj).then(function(search) {
-        search.get_search()
-    })
- * config_obj = {
-    "db_user": "",
-    "db_password": "",
-    "db_host": "localhost",
-    "db_name": "",
-    "db_table": "",
-    "db_driver": "mysql",
-    "search_fields": [],
-    "display_fields": []
-   }
+ * DB Search module
+ * @usage:
+Search = require('search');
+Search.init(require('config.json')).then(function(search) {
+    let allColumns    = search.get_columns();
+    // get those searchFields defined in config object
+    let searchColumns = search.get_columns_selected();
+    let result        = search.get_search(query);
+});
  */
+
+'use strict';
 
 var Sequelize  = require('sequelize');
 var _          = Sequelize.Utils._;
@@ -23,29 +20,65 @@ var _          = Sequelize.Utils._;
  */
 String.prototype.wrap = function(begin, end) {
     end = end || begin;
-    return begin+this+end;
+    return begin + this + end;
 };
 
+// IIFE to not pollute the global environment
 (function() {
 
     var Model;
 
-    function exposeAPI(config, tables) {
-        var tableColumns = Object.keys(tables);
+    /**
+    * initialize search engine
+    * @param {Object} config
+       keys: db_user, db_password, db_host, db_name, db_table, db_driver,
+       {Array} search_fields
+       {Array} display_fields
+    */
+    exports.init = function init(config) {
+        var dbh = new Sequelize(config.db_name, config.db_user, config.db_password, {
+            host: config.db_host,
+            dialect: config.db_driver
+        });
+        Model = dbh.define(config.db_table);
+        return new Promise(function(resolve) {
+            Model.describe().then(
+                _.flow(
+                    Object.keys, // keys of describe()'s object are the columns
+                    _.partial(exposeAPI, config), // @TODO use config as context or argument?
+                    resolve
+                ));
+        });
+    }
+
+    /**
+     * Expose API to the requirer
+     * @TODO be able to set search_fields and display_fields per request
+     * currently is per instance :E
+     * @TODO in the future be able to search in all tables
+     * @param {Object} config
+     * @param {Array} columns (resolved value from Model.describe)
+     */
+    function exposeAPI(config, tableColumns) {
         // avoid querying unexisting columns
         var searchFields  = (config.search_fields  === '*') ? tableColumns : _.intersection(tableColumns, config.search_fields);
         var displayFields = (config.display_fields === '*') ? tableColumns : _.intersection(tableColumns, config.display_fields);
 
         var API = {
-            searchFields: searchFields,
-            displayFields: displayFields,
-            get_columns: _.constant(tableColumns),
-            get_columns_selected: _.constant(displayFields)
+            searchFields         : searchFields,
+            displayFields        : displayFields,
+            get_columns          : _.constant(tableColumns),
+            get_columns_selected : _.constant(displayFields)
         };
         API.get_search = search.bind(API);
         return API;
     }
 
+    /**
+     * search itself
+     * @param {Object} query comes from Expres's BodyParser I think
+     * @see 'defaults' below for query object keys
+     */
     function search(query) {
         var defaults = {
             q: undefined, // the search term
@@ -88,21 +121,6 @@ String.prototype.wrap = function(begin, end) {
 
     function mkLikeObj(term) {
         return {'$like': term.wrap('%')};
-    }
-
-    exports.init = function init(config) {
-        var dbh = new Sequelize(config.db_name, config.db_user, config.db_password, {
-            host: config.db_host,
-            dialect: config.db_driver
-        });
-        Model = dbh.define(config.db_table);
-        return new Promise(function(resolve) {
-            Model.describe().then(
-                _.flow(
-                    _.partial(exposeAPI, config),
-                    resolve
-                ));
-        });
     }
 
 })();
