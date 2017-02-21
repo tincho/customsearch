@@ -1,15 +1,17 @@
 {
   "name": "customsearch",
-  "version": "0.0.1",
+  "version": "0.0.14",
   "dependencies": {
     "body-parser": "^1.15.2",
     "express": "^4.10.6",
     "mysql": "^2.5.4",
     "readline-sync": "^1.4.5",
-    "sequelize": "^3.27.0"
+    "sequelize": "^3.27.0",
+    "utf8": "^2.1.2"
   },
   "scripts": {
       "start": "node server.js",
-      "postinstall": "node configure.js"
+      "postinstall": "node configure.js",
+      "dev": "if [ -x \"$(command -v nodemon)\" ]; then nodemon server.js; else  echo 'Better with NodeMon! npm install -g nodemon'; node server.js; fi"
   }
 }

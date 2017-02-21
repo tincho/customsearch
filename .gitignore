@@ -3,3 +3,5 @@ node_modules/*
 config.json
 config.json.generated
 npm-debug.log
+!public/empty
+public/*
