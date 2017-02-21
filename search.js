@@ -34,6 +34,7 @@ String.prototype.wrap = function(begin, end) {
        keys: db_user, db_password, db_host, db_name, db_table, db_driver,
        {Array} search_fields
        {Array} display_fields
+     * @return {Promise} resolved once table is describe()'d
     */
     exports.init = function init(config) {
         var dbh = new Sequelize(config.db_name, config.db_user, config.db_password, {
@@ -78,6 +79,7 @@ String.prototype.wrap = function(begin, end) {
      * search itself
      * @param {Object} query comes from Expres's BodyParser I think
      * @see 'defaults' below for query object keys
+     * @return {Promise}
      */
     function search(query) {
         var defaults = {
@@ -100,6 +102,7 @@ String.prototype.wrap = function(begin, end) {
             attributes: this.displayFields,
             where: {
                 '$or': fieldsConditionList
+                // @TODO additional fixed conditions?
             },
             raw: true,
             limit: parseInt(data.limit, 10),
