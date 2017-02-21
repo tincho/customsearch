@@ -1,0 +1,62 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>Demo search</title>
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="ROBOTS" content="NOINDEX">
+    <script type="text/javascript" src="https://cdn.rawgit.com/tincho/64645b384a23e57f326491eb4007d856/raw/9e0554a6dd3c5eb3418498e5b58356e4bd972bf1/getData.js"></script>
+    <style type="text/css">
+    input {
+        clear: both;
+        display: block;
+    }
+    #debug {
+        width: 100%;
+        overflow: scroll;
+    }
+    #debug pre {
+        word-wrap: break-word;
+    }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <form id="searchForm" method="get" action="/search">
+            <input type="text" name="q" placeholder="Search...">
+
+            <div class="btn-group" data-toggle="buttons">
+              <label class="btn btn-primary active">
+                <input type="radio" name="type" id="typeAny" value="any" autocomplete="off" checked> Any
+              </label>
+              <label class="btn btn-primary">
+                <input type="radio" name="type" id="typeAll" value="all" autocomplete="off"> All
+              </label>
+              <label class="btn btn-primary">
+                <input type="radio" name="type" id="typeFull" value="full" autocomplete="off"> Full
+              </label>
+            </div>
+            <button type="submit">Search!</button>
+        </form>
+
+        <div id="debug">
+            <pre></pre>
+        </div>
+    </div>
+</body>
+<script type="text/javascript">
+var $ = document.querySelector.bind(document);
+$("#searchForm").addEventListener("submit", function(evt) {
+    evt.preventDefault();
+    var q = $("input[name=q]").value;
+    var type = $("input[name=type]:checked").value;
+    getData(this.action + '?q=' + q + '&type=' + type, function(data) {
+        $("#debug pre").innerText = data.responseText;
+    });
+    return false;
+})
+</script>
+</html>
