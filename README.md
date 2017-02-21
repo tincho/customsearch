@@ -35,6 +35,8 @@ if no port specified will listen on 3000
 * http://localhost:3000/columns/selected (those listed under *displayFields*)
 * http://localhost:3000/demo
 
+A `public` dir is provided so one can load or link in there apps for debugging purposes, including a current demo.
+Serve from `public` in production env is discouraged.
 
 # Configure
 
