@@ -1,12 +1,12 @@
 /**
- * DB Search module
+ * DB Search module "Kind of Query Builder"
  * @usage:
 Search = require('search');
 Search.init(require('config.json')).then(function(search) {
     let allColumns    = search.get_columns();
     // get those searchFields defined in config object
     let searchColumns = search.get_columns_selected();
-    let result        = search.get_search(query);
+    let result        = search.get_search(paramsObject); // @see QueryBuilder
 });
  */
 
@@ -42,88 +42,62 @@ String.prototype.wrap = function(begin, end) {
             dialect: config.db_driver
         });
         Model = dbh.define(config.db_table);
-        return new Promise(function(resolve) {
-            Model.describe().then(
-                _.flow(
-                    Object.keys, // keys of describe()'s object are the columns
-                    _.partial(exposeAPI, config), // @TODO use config as context or argument?
-                    resolve
-                ));
+        return new Promise(resolve => {
+            Model.describe().then(columns => {
+                let tableColumns = Object.keys(columns),
+                    // avoid querying unexisting columns:
+                    searchFields  = (config.search_fields  === '*') ? tableColumns : _.intersection(tableColumns, config.search_fields),
+                    displayFields = (config.display_fields === '*') ? tableColumns : _.intersection(tableColumns, config.display_fields),
+                    moduleAPI = {
+                        get_columns: () => tableColumns,
+                        get_columns_selected: () => displayFields,
+                        get_search: params => Model.findAll(QueryBuilder(params, displayFields, searchFields))
+                    };
+                resolve(moduleAPI);
+            });
         });
     }
 
     /**
-     * Expose API to the requirer
-     * @TODO be able to set search_fields and display_fields per request
-     * currently is per instance :E
-     * @TODO in the future be able to search in all tables
-     * @param {Object} config
-     * @param {Array} columns (resolved value from Model.describe)
-     */
-    function exposeAPI(config, tableColumns) {
-        // avoid querying unexisting columns
-        var searchFields  = (config.search_fields  === '*') ? tableColumns : _.intersection(tableColumns, config.search_fields);
-        var displayFields = (config.display_fields === '*') ? tableColumns : _.intersection(tableColumns, config.display_fields);
-
-        var API = {
-            searchFields         : searchFields,
-            displayFields        : displayFields,
-            get_columns          : _.constant(tableColumns),
-            get_columns_selected : _.constant(displayFields)
-        };
-        API.get_search = search.bind(API);
-        return API;
-    }
-
-    /**
-     * search itself
+     * Query Builder properly
      * @param {Object} query comes from Expres's BodyParser I think
+     * @TODO someday support expressions as NOT:term or term{n-times}
      * @see 'defaults' below for query object keys
+     * @param {Array} displayFields columns to be selected
+     * @param {Array} searchFields columns to match against terms
      * @return {Promise}
      */
-    function search(query) {
+    function QueryBuilder(query, displayFields, searchFields) {
         var defaults = {
             q: undefined, // the search term
             type: 'any',
             // 'any' match any of the specified words. DEFAULT OPTION
             // 'all' : match each and every word but may be separate
             // 'full' : match the whole term without splitting words
-            limit: 148,
+            limit: 20,
             offset: 0
         };
         var data = Object.assign(defaults, query);
         var terms = (data.type === 'full') ? [data.q] : data.q.replace(/\s+/g, ' ').split(' ');
-        var fieldConditionsType = (data.type === 'all') ? '$and' : '$or';
+        var conditionType = (data.type === 'all') ? '$and' : '$or';
 
-        var mkConditionObjForThisSearch = _.partial(mkConditionObj, fieldConditionsType, terms.map(mkLikeObj));
-        var fieldsConditionList = this.searchFields.map(mkConditionObjForThisSearch);
+        // @TODO utf8 encode ? solve that!
+        var likeStatements = terms.map(term => ({'$like': term.wrap('%')}));
+        var conditions = searchFields.map(field => ({
+            [field]: {
+                [conditionType]: likeStatements
+            }
+        }));
 
-        return Model.findAll({
-            attributes: this.displayFields,
+        return {
+            attributes: displayFields,
             where: {
-                '$or': fieldsConditionList
+                '$or': conditions
                 // @TODO additional fixed conditions?
             },
             raw: true,
             limit: parseInt(data.limit, 10),
             offset: parseInt(data.offset, 10)
-        });
+        }
     }
-
-    /**
-     * @see ES6 computed property names in object literal definition
-     * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Object_initializer
-     */
-    function mkConditionObj(conditionType, conditions, field) {
-        return {
-            [field]: {
-                [conditionType]: conditions
-            }
-        };
-    }
-
-    function mkLikeObj(term) {
-        return {'$like': term.wrap('%')};
-    }
-
 })();
