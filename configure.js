@@ -4,56 +4,43 @@ console.log("---------------------------");
 
 var readlineSync = require('readline-sync');
 var Sequelize    = require('sequelize');
-var _            = Sequelize.Utils._; // give thanks and praises, hail to the _!
+var _            = Sequelize.Utils._;
 var writeFile    = require('fs').writeFile;
 
-var outputFile = "config.json.generated";
-var writeFileCallback = err => err ? console.log(err) :
-    console.log(`Config saved to ${outputFile}. Rename to config.json to use this setup`);
-var writeStringToFile = _.partial(writeFile, outputFile, _, writeFileCallback);
-
 var config = {
-    db_driver: "mysql"
+    db_driver: "mysql" // @TODO support others !
 };
-var assignToConfig = _.partial(_.assign, config);
+const assignToConfig = data => _.assign(config, data);
 
-assignToConfig(promptBasicAuth());
+var outputFile = "config.json.generated";
+const writeStringToFile = str => writeFile(outputFile, str, err => {
+  let message = err
+    ? err
+    : `Config saved to ${outputFile}. Rename to config.json to use this setup`;
+  console.log(message);
+});
+
+
+assignToConfig(promptConnInfo());
 
 var sequelize = new Sequelize(config.db_name, config.db_user, config.db_password, {
   host: config.db_host,
   dialect: config.db_driver
 });
 
-sequelize.showAllSchemas().then(
-    _.flow(
-        // all first values are the table names:
-        _.method('map', _.flow(_.values, _.first)),
-        promptTable,
-        // once i get the answer set it to global var config
-        assignToConfig,
-        // and get it from there (config)
-        _.property("db_table"),
-        // to run sequelize.define(config.db_table)
-        _.bind(sequelize.define, sequelize),
-        // and get its columns
-        _.method('describe'),
-        // which returns a promise so we call promise.then( fn )
-        _.method('then',
-            _.flow(
-                // promise result is an object whose keys are the fields array
-                Object.keys,
-                // print them and ask to select search and display fields
-                promptFields,
-                assignToConfig,
-                // finally save it stringified in outputFile
-                JSON.stringify,
-                writeStringToFile
-            )
-        )
-    )
-);
+sequelize.showAllSchemas().then(schemas => {
+  // all first values are the table names:
+  let tables = schemas.map(schema =>  _.first(_.values(schema)));
+  assignToConfig(promptTable(tables));
+  // config.db_table was set in the previous statement
+  sequelize.define(config.db_table).describe().then(table => {
+    let fields = Object.keys(table);
+    assignToConfig(promptFields(fields));
+    writeStringToFile(JSON.stringify(config));
+  })
+});
 
-function promptBasicAuth() {
+function promptConnInfo() {
     console.log('Please provide DB connection data. Only MySQL supported by now \n');
     var questions = {
         "db_host"     : { label: "Host (empty: $<defaultInput>): ", options: { defaultInput: "localhost" } },
