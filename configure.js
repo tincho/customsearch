@@ -81,8 +81,20 @@ function promptFields(fields) {
     console.log("---------------------------");
     var displayFields = readlineSync.question('Columns to return (separated by "," or leave empty for all): ', { defaultInput: '*' });
     console.log("---------------------------");
-    return {
-        search_fields:  (searchFields  !== '*') ?  searchFields.replace(' ', '').split(',') : searchFields,
-        display_fields: (displayFields !== '*') ? displayFields.replace(' ', '').split(',') : displayFields,
+    let configFields = {
+        search_fields:  selectedFields(searchFields),
+        display_fields: selectedFields(displayFields)
     };
+
+    var orderFieldKey = readlineSync.keyInSelect(fields, 'Default ORDER BY column?: ');
+    if (orderFieldKey === -1) {
+      return configFields;
+    }
+    config.defaultOrderField = fields[orderFieldKey];
+    config.defaultOrderDirection = readlineSync.question('Direction?: ASC/DESC (defaults to ASC) ', { defaultInput: 'ASC' });
+    return configFields;
+
+    function selectedFields(f) {
+      return f !== '*' ? f.replace(' ', '').split('j') : f;
+    }
 }

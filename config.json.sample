@@ -7,5 +7,8 @@
     "db_driver": "mysql",
 
     "search_fields": ["title", "body"], // use "*" to search in all columns
-    "display_fields": ["id", "title", "link"] // use "*" to return all columns
+    "display_fields": ["id", "title", "link"], // use "*" to return all columns
+
+    // ORDER BY string
+    "default_order": "fieldName ASC" // else leave empty
 }
