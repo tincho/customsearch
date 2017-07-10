@@ -51,7 +51,7 @@ String.prototype.wrap = function(begin, end) {
                     moduleAPI = {
                         get_columns: () => tableColumns,
                         get_columns_selected: () => displayFields,
-                        get_search: params => Model.findAll(QueryBuilder(params, displayFields, searchFields))
+                        get_search: params => Model.findAndCountAll(QueryBuilder(params, displayFields, searchFields))
                     };
                 resolve(moduleAPI);
             });
@@ -78,6 +78,7 @@ String.prototype.wrap = function(begin, end) {
             offset: 0
         };
         var data = Object.assign(defaults, query);
+
         var terms = (data.type === 'full') ? [data.q] : data.q.replace(/\s+/g, ' ').split(' ');
         var conditionType = (data.type === 'all') ? '$and' : '$or';
 
@@ -97,7 +98,8 @@ String.prototype.wrap = function(begin, end) {
             },
             raw: true,
             limit: parseInt(data.limit, 10),
-            offset: parseInt(data.offset, 10)
+            offset: parseInt(data.offset, 10),
+            order: data.order
         }
     }
 })();

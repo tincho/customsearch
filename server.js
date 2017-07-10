@@ -23,8 +23,11 @@ Search.init(config).then(function(search) {
     console.log("Config ready");
     app.get("/search", (req, res) => {
         res.type('json');
-        search.get_search(req.query).then(result => {
-            res.send(JSON.stringify(result, utf8decode));
+        search.get_search(req.query).then(function(result) {
+            result.limit = req.query.limit;
+            result.offset = req.query.offset;
+            let response = JSON.stringify(result, utf8decode);
+            res.send(response);
         });
     });
     app.get("/columns", (req, res) => res.json(search.get_columns()));
