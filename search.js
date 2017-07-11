@@ -37,14 +37,24 @@ var QueryBuilder  = require("./queryBuilder");
         Model = dbh.define(config.db_table);
         return new Promise(resolve => {
             Model.describe().then(columns => {
+                // ensure not querying unexisting columns:
+                const existingFields = f => (f === '*') ? tableColumns : _.intersection(tableColumns, f);
+
                 let tableColumns = Object.keys(columns),
-                    // avoid querying unexisting columns:
-                    searchFields  = (config.search_fields  === '*') ? tableColumns : _.intersection(tableColumns, config.search_fields),
-                    displayFields = (config.display_fields === '*') ? tableColumns : _.intersection(tableColumns, config.display_fields),
+                    fields = {
+                      toMatch:  existingFields(config.search_fields),
+                      toSelect: existingFields(config.search_fields),
+                      // @TODO
+                      orderBy: config.default_order
+                    };
                     moduleAPI = {
                         get_columns: () => tableColumns,
                         get_columns_selected: () => displayFields,
-                        get_search: params => Model.findAndCountAll(QueryBuilder(params, displayFields, searchFields))
+                        get_search: params => {
+                          // @TODO prevent errors ensuring order field exists!
+                          // let orderField = params.order.replace(/ASC|DESC/,'').trim();
+                          return Model.findAndCountAll(QueryBuilder(params, fields));
+                        }
                     };
                 resolve(moduleAPI);
             });

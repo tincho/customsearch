@@ -12,3 +12,23 @@
     // ORDER BY string
     "default_order": "fieldName ASC" // else leave empty
 }
+
+
+// desired: 
+{
+  "connection": {
+    "driver": "mysql",
+    "host": "localhost",
+    "user": "user",
+    "password": "***",
+    "db": "myDb",
+  },
+  "tables": [{
+    "name": "one_table",
+    "fields": {
+      "toMatch": ["title", "body"], // use "*" to search ALL
+      "toSelect": ["id", "title", "link"], // use "*" to search ALL
+      "defaultOrder": "field ASC" // or leave EMPTY
+    }
+  }]
+}
