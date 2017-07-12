@@ -61,6 +61,7 @@ function promptTable(tables) {
 };
 
 function promptFields(fields) {
+    const selectedFields = f => (f !== '*') ? f.replace(' ', '').split('j') : f;
     console.log("---------------------------");
     console.log('Columns are: ' + fields.join(', '));
     console.log("---------------------------");
@@ -68,8 +69,16 @@ function promptFields(fields) {
     console.log("---------------------------");
     var displayFields = readlineSync.question('Columns to return (separated by "," or leave empty for all): ', { defaultInput: '*' });
     console.log("---------------------------");
-    return {
-        search_fields:  (searchFields  !== '*') ?  searchFields.replace(' ', '').split(',') : searchFields,
-        display_fields: (displayFields !== '*') ? displayFields.replace(' ', '').split(',') : displayFields,
+    let configFields = {
+        search_fields:  selectedFields(searchFields),
+        display_fields: selectedFields(displayFields)
     };
+
+    var orderFieldKey = readlineSync.keyInSelect(fields, 'Default ORDER BY column? (cancel for no default order) ');
+    if (orderFieldKey === -1 || typeof fields[orderFieldKey] === 'undefined') {
+      return configFields;
+    }
+    let direction = readlineSync.question('Direction?: ASC/DESC (defaults to ASC) ', { defaultInput: 'ASC' });
+    configFields.default_order = fields[orderFieldKey] + " " + direction;
+    return configFields;
 }
