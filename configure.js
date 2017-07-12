@@ -14,7 +14,7 @@ const assignToConfig = data => _.assign(config, data);
 
 var outputFile = "config.json.generated";
 const writeStringToFile = str => writeFile(outputFile, str, err => {
-  let message = err
+  var message = err
     ? err
     : `Config saved to ${outputFile}. Rename to config.json to use this setup`;
   console.log(message);
@@ -30,11 +30,11 @@ var sequelize = new Sequelize(config.db_name, config.db_user, config.db_password
 
 sequelize.showAllSchemas().then(schemas => {
   // all first values are the table names:
-  let tables = schemas.map(schema =>  _.first(_.values(schema)));
+  var tables = schemas.map(schema =>  _.first(_.values(schema)));
   assignToConfig(promptTable(tables));
   // config.db_table was set in the previous statement
   sequelize.define(config.db_table).describe().then(table => {
-    let fields = Object.keys(table);
+    var fields = Object.keys(table);
     assignToConfig(promptFields(fields));
     writeStringToFile(JSON.stringify(config));
   })
@@ -61,24 +61,25 @@ function promptTable(tables) {
 };
 
 function promptFields(fields) {
-    const selectedFields = f => (f !== '*') ? f.replace(' ', '').split('j') : f;
+    var selectedFields = f => (f !== '*') ? f.replace(' ', '').split(',') : f;
     console.log("---------------------------");
     console.log('Columns are: ' + fields.join(', '));
     console.log("---------------------------");
     var searchFields  = readlineSync.question('Columns to search in (separated by "," or leave empty for all): ', { defaultInput: '*' });
     console.log("---------------------------");
     var displayFields = readlineSync.question('Columns to return (separated by "," or leave empty for all): ', { defaultInput: '*' });
-    console.log("---------------------------");
-    let configFields = {
+    var configFields = {
         search_fields:  selectedFields(searchFields),
         display_fields: selectedFields(displayFields)
     };
 
+    console.log("---------------------------");
+    console.log("Pick default ORDER column or cancel to finish.");
     var orderFieldKey = readlineSync.keyInSelect(fields, 'Default ORDER BY column? (cancel for no default order) ');
     if (orderFieldKey === -1 || typeof fields[orderFieldKey] === 'undefined') {
       return configFields;
     }
-    let direction = readlineSync.question('Direction?: ASC/DESC (defaults to ASC) ', { defaultInput: 'ASC' });
+    var direction = readlineSync.question('Direction?: ASC/DESC (defaults to ASC) ', { defaultInput: 'ASC' });
     configFields.default_order = fields[orderFieldKey] + " " + direction;
     return configFields;
 }
