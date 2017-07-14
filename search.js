@@ -43,7 +43,7 @@ var QueryBuilder = require("./queryBuilder");
                 let tableColumns = Object.keys(columns),
                     fields = {
                         toMatch: existingFields(config.search_fields),
-                        toSelect: existingFields(config.search_fields),
+                        toSelect: existingFields(config.display_fields),
                         orderBy: config.default_order
                     },
                     moduleAPI = {
