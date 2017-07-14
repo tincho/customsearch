@@ -48,7 +48,7 @@ var QueryBuilder = require("./queryBuilder");
                     },
                     moduleAPI = {
                         get_columns: () => tableColumns,
-                        get_columns_selected: () => displayFields,
+                        get_columns_selected: () => fields.toSelect,
                         get_search: params => {
                             // @TODO prevent errors ensuring order field exists!
                             // let orderField = params.order.replace(/ASC|DESC/,'').trim();
