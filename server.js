@@ -17,11 +17,13 @@ var Search     = require('./search');
 var utf8       = require('utf8');
 var _          = require('sequelize').Utils._;
 
+
+var API_ROOT = process.env.API_ROOT || '';
 var app = express();
 
 Search.init(config).then(function(search) {
     console.log("Config ready");
-    app.get("/search", (req, res) => {
+    app.get(API_ROOT + "/search", (req, res) => {
         res.type('json');
         search.get_search(req.query).then(function(result) {
             result.limit = req.query.limit;
@@ -30,12 +32,15 @@ Search.init(config).then(function(search) {
             res.send(response);
         });
     });
-    app.get("/columns", (req, res) => res.json(search.get_columns()));
-    app.get("/columns/selected", (req, res) => res.json(search.get_columns_selected()));
+    app.get(API_ROOT + "/columns", (req, res) => res.json(search.get_columns()));
+    app.get(API_ROOT + "/columns/selected", (req, res) => res.json(search.get_columns_selected()));
     app.use("/", express.static("./public"));
 });
-console.log("Listening on http://localhost:" + process.env.PORT);
-app.listen(process.env.PORT || 3000);
+
+var PORT = process.env.PORT || 3000;
+console.log("Listening on http://localhost:" + PORT);
+console.log("API Root: " + API_ROOT);
+app.listen(PORT);
 
 function utf8decode(key, value) {
     if (typeof value !== 'string') return value;
