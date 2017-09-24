@@ -1,3 +1,4 @@
+'use strict';
 module.exports = QueryBuilder;
 
 /**
@@ -24,27 +25,48 @@ function QueryBuilder(query, fields) {
     var data = Object.assign(queryDefaults, query);
 
     var terms = (data.type === 'full') ? [data.q] : data.q.replace(/\s+/g, ' ').split(' ');
-    var conditionType = (data.type === 'all') ? '$and' : '$or';
     var orderBy = data.order || fields.orderBy || undefined;
-
-    // @TODO utf8 encode ? solve that!
-    var likeStatements = terms.map(term => ({'$like': term.wrap('%')}));
-    var conditions = fields.toMatch.map(field => ({
-        [field]: {
-            [conditionType]: likeStatements
-        }
-    }));
 
     return {
         attributes: fields.toSelect,
-        where: {
-            '$or': conditions
-        },
+        where: Conditions(terms, fields.toMatch, data.type),
         raw: true,
         limit: parseInt(data.limit, 10),
         offset: parseInt(data.offset, 10),
         order: orderBy
     };
+}
+
+function Conditions(terms, fields, matchType) {
+    var matchStrategies = {
+        'any': defaultConditions,
+        'full': defaultConditions,
+        'all': function allInAnyFields() {
+            return {
+                '$and': terms.map(term => ({
+                    '$or': fields.map(field => ({
+                        [field]: {'$like': term.wrap('%')}
+                    }) )
+                }) )
+            }
+        }
+        // 'all' used to be like this: (see https://github.com/tincho/customsearch/issues/5)
+        // function allInSameField() {
+        //  return defaultConditions('$and');
+        // }
+    }
+
+    return matchStrategies[matchType]();
+
+    function defaultConditions(conditionType) {
+        conditionType = conditionType || '$or';
+        return {
+            '$or' : fields.map(field => ({
+                [field]: { [conditionType]: terms.map(term => ({'$like': term.wrap('%')})) }
+            }))
+        }
+    }
+
 }
 
 /**
