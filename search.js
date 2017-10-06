@@ -50,9 +50,13 @@ var QueryBuilder = require("./queryBuilder");
                         get_columns: () => tableColumns,
                         get_columns_selected: () => fields.toSelect,
                         get_search: params => {
-                            // @TODO prevent errors ensuring order field exists!
-                            // let orderField = params.order.replace(/ASC|DESC/,'').trim();
-                            return Model.findAndCountAll(QueryBuilder(params, fields));
+                            let
+                              query = QueryBuilder(params, fields),
+                              direction = _.get(params.order.match(/ASC|DESC/), 0, ""),
+                              orderFields = params.order.replace(/ASC|DESC/,'').trim().split(","),
+                              existingOrderFields = existingFields(orderFields);
+                            query.orderBy = existingOrderFields.length ? existingOrderFields.join(", ") + direction : fields.orderBy;
+                            return Model.findAndCountAll(query);
                         }
                     };
                 resolve(moduleAPI);

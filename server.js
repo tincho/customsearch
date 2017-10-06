@@ -26,8 +26,8 @@ Search.init(config).then(function(search) {
     app.get(API_ROOT + "/search", (req, res) => {
         res.type('json');
         search.get_search(req.query).then(function(result) {
-            result.limit = req.query.limit;
-            result.offset = req.query.offset;
+            result.limit = parseInt(req.query.limit);
+            result.offset = parseInt(req.query.offset);
             let response = JSON.stringify(result, utf8decode);
             res.send(response);
         });

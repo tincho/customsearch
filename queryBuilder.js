@@ -25,15 +25,13 @@ function QueryBuilder(query, fields) {
     var data = Object.assign(queryDefaults, query);
 
     var terms = (data.type === 'full') ? [data.q] : data.q.replace(/\s+/g, ' ').split(' ');
-    var orderBy = data.order || fields.orderBy || undefined;
 
     return {
         attributes: fields.toSelect,
         where: Conditions(terms, fields.toMatch, data.type),
         raw: true,
         limit: parseInt(data.limit, 10),
-        offset: parseInt(data.offset, 10),
-        order: orderBy
+        offset: parseInt(data.offset, 10)
     };
 }
 
