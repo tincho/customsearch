@@ -34,7 +34,14 @@ Search.init(config).then(function(search) {
     });
     app.get(API_ROOT + "/columns", (req, res) => res.json(search.get_columns()));
     app.get(API_ROOT + "/columns/selected", (req, res) => res.json(search.get_columns_selected()));
-    app.use("/", express.static("./public"));
+
+    // @Authorize
+    app.get(API_ROOT + "/configure", (req, res) => {
+      var
+        config_keys   = [ "db_table", "search_fields", "display_fields", "default_order" ],
+        config_public = _.pick(config, config_keys);
+      res.json(config_public)
+    });
 });
 
 var PORT = process.env.PORT || 3000;
