@@ -53,7 +53,8 @@ const SearchAPI = (config, runQuery, tableColumns) => {
               // @TODO obtain postProcesses from outer world ?
               let postProcess = [ Pagination ];
               let augments = postProcess.map(fn => fn(query, result));
-              return Object.assign(result, ...augments);
+              // @TODO use ES6 return Object.assign(result, ...augments);
+              return Object.assign.apply({}, [result].concat(augments))
           });
       }
   };

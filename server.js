@@ -21,22 +21,28 @@ var API_ROOT = process.env.API_ROOT || '';
 var app = express();
 app.use("/", express.static("./public"));
 
-Search.init(config).then(API => {
+var APIready = Search.init(config);
+APIready.then(function() {
     console.log("Config ready");
+});
 
-    // all table columns... should be private??
-    app.get(API_ROOT + "/columns", (req, res) => res.json(API.get_columns()));
-
-    // columns that will be visible to frontend result
-    app.get(API_ROOT + "/columns/selected", (req, res) => res.json(API.get_columns_selected()));
-
-    // search itself
-    app.get(API_ROOT + "/search", (req, res) => {
-        res.type('json');
-        API.get_search(req.query).then(result => {
+// all table columns... should be private??
+app.get(API_ROOT + "/columns", (req, res) => {
+    APIready.then(API => res.json(API.get_columns()));
+});
+// columns that will be visible to frontend result
+app.get(API_ROOT + "/columns/selected", (req, res) => {
+    APIready.then(API => res.json(API.get_columns_selected()));
+});
+// search itself
+app.get(API_ROOT + "/search", (req, res) => {
+    APIready.then(API => {
+        //console.log(search);
+        API.get_search(req.query).then(function(result) {
+            res.type('json');
             let response = JSON.stringify(result, utf8decode);
             res.send(response);
-        });
+          });
     });
 });
 
