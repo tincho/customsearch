@@ -21,15 +21,19 @@ const SearchAPI = (config, runQuery, tableColumns) => {
   const existingFields = f => (f === '*') ? tableColumns : _.intersection(tableColumns, f);
   let fields = {
       toMatch: existingFields(config.search_fields),
-      toSelect: existingFields(config.display_fields),
-      orderBy: config.default_order
+      toSelect: existingFields(config.display_fields)
   };
   return {
       get_columns: () => tableColumns,
       get_columns_selected: () => fields.toSelect,
       get_search: params => {
-          let query = QueryBuilder(params, fields);
+          // offset and page are incompatible . user should choose either
+          // override frontend offset ?
+          // params.offset = ~~params.limit * Math.max(~~params.page - 1, 0)
+          // delete params.page;
+          // todo: handle { page, limit } if page > totalPages
           console.log(params);
+          let query = QueryBuilder(params, fields);
           if (params.order) {
               let
                   direction = _.get(params.order.match(/ASC|DESC/), 0, ""),
@@ -37,10 +41,27 @@ const SearchAPI = (config, runQuery, tableColumns) => {
                   existingOrderFields = existingFields(orderFields);
               query.order = existingOrderFields.length
                   ? existingOrderFields.join(", ") + " " + direction
-                  : fields.orderBy;
+                  : config.default_order;
           }
-          let result = runQuery(query);
-          return result;
+          return runQuery(query).then(result => {
+              let currentPage = 1 + Math.ceil(query.offset / query.limit),
+                  totalPages  = Math.floor(result.count / query.limit) + 1;
+              const prevTo = page => (currentPage > 1) ? currentPage - 1 : null;
+              const nextTo = page => (currentPage < totalPages) ? currentPage + 1 : null;
+              return Object.assign({
+                  _pages: {
+                    total: totalPages,
+                    current: currentPage,
+                    prev: prevTo(currentPage),
+                    next: nextTo(currentPage)
+                  },
+                  limit: query.limit,
+                  offset: query.offset
+              }, result);
+              // return Object.assign(result, postProcess(query, result))
+              // postProcess = (query, result) => augment result with all given postProcess callbacks (should return object to be merged)
+              // e.g = Pagination, HATEOAS
+          });
       }
   };
 };

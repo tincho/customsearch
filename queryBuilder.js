@@ -30,8 +30,8 @@ function QueryBuilder(query, fields) {
         attributes: fields.toSelect,
         where: Conditions(terms, fields.toMatch, data.type),
         raw: true,
-        limit: parseInt(data.limit, 10),
-        offset: parseInt(data.offset, 10)
+        limit: parseInt(data.limit),
+        offset: parseInt(data.offset)
     };
 }
 

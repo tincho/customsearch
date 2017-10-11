@@ -18,28 +18,31 @@ var utf8       = require('utf8');
 var _          = require('sequelize').Utils._;
 
 
+// this might come from config ?
 var API_ROOT = process.env.API_ROOT || '';
 var app = express();
+app.use("/", express.static("./public"));
 
-Search.init(config).then(function(search) {
+Search.init(config).then(API => {
     console.log("Config ready");
 
-    app.use("/", express.static("./public"));
+    // all table columns... should be private??
+    app.get(API_ROOT + "/columns", (req, res) => res.json(API.get_columns()));
 
+    // columns that will be visible to frontend result
+    app.get(API_ROOT + "/columns/selected", (req, res) => res.json(API.get_columns_selected()));
+
+    // search itself
     app.get(API_ROOT + "/search", (req, res) => {
         res.type('json');
-        search.get_search(req.query).then(function(result) {
-            result.limit = parseInt(req.query.limit);
-            result.offset = parseInt(req.query.offset);
+        API.get_search(req.query).then(result => {
             let response = JSON.stringify(result, utf8decode);
             res.send(response);
         });
     });
-    app.get(API_ROOT + "/columns", (req, res) => res.json(search.get_columns()));
-    app.get(API_ROOT + "/columns/selected", (req, res) => res.json(search.get_columns_selected()));
 });
 
-var PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3000;
 console.log("Listening on http://localhost:" + PORT);
 console.log("API Root: " + API_ROOT);
 app.listen(PORT);
