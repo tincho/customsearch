@@ -15,8 +15,6 @@ var bodyParser = require('body-parser');
 var config     = require('./config');
 var Search     = require('./search');
 var utf8       = require('utf8');
-var _          = require('sequelize').Utils._;
-
 
 // this might come from config ?
 var API_ROOT = process.env.API_ROOT || '';
