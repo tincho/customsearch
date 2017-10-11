@@ -23,6 +23,9 @@ var app = express();
 
 Search.init(config).then(function(search) {
     console.log("Config ready");
+
+    app.use("/", express.static("./public"));
+
     app.get(API_ROOT + "/search", (req, res) => {
         res.type('json');
         search.get_search(req.query).then(function(result) {
@@ -34,7 +37,6 @@ Search.init(config).then(function(search) {
     });
     app.get(API_ROOT + "/columns", (req, res) => res.json(search.get_columns()));
     app.get(API_ROOT + "/columns/selected", (req, res) => res.json(search.get_columns_selected()));
-    app.use("/", express.static("./public"));
 });
 
 var PORT = process.env.PORT || 3000;
