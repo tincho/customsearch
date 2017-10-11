@@ -15,10 +15,11 @@ Search.init(require('config.json')).then(function(search) {
 const Sequelize = require('sequelize');
 const QueryBuilder = require('./queryBuilder');
 const _ = Sequelize.Utils._;
+const intersectionOrAll = (all, items) => (items === '*') ? all : _.intersection(all, items);
 
 const SearchAPI = (config, runQuery, tableColumns) => {
   // ensure not querying unexisting columns:
-  const existingFields = f => (f === '*') ? tableColumns : _.intersection(tableColumns, f);
+  const existingFields = _.partial(intersectionOrAll, tableColumns);
   let fields = {
       toMatch: existingFields(config.search_fields),
       toSelect: existingFields(config.display_fields)
@@ -33,14 +34,17 @@ const SearchAPI = (config, runQuery, tableColumns) => {
           // (default limit is inside QueryBuilder)
           // params.offset = ~~params.limit * Math.max(~~params.page - 1, 0)
           // delete params.page;
-          // todo: handle { page, limit } if page > totalPages
+          // @TODO: handle { page, limit } if page > totalPages
           console.log(params);
           let query = QueryBuilder(params, fields);
           if (params.order) {
+              // @TODO handle order as:
+              // &order[0]=field1 &direction[0]=desc &order[1]=field2 &direction[1]=asc
               let
                   direction = _.get(params.order.match(/ASC|DESC/), 0, ""),
                   orderFields = params.order.replace(/ASC|DESC/,'').trim().split(","),
                   existingOrderFields = existingFields(orderFields);
+              // this is to ensure no unexisting field gets passed as ORDER BY
               query.order = existingOrderFields.length
                   ? existingOrderFields.join(", ") + " " + direction
                   : config.default_order;
@@ -72,6 +76,15 @@ const Pagination = (query, result) => {
     }
 }
 
+// example:
+/* const PostProcessThatChangesRows = (query, result) => {
+    let rows = Array.from(result.rows).map(row => {
+        row.something = "something";
+        return row;
+    });
+    return { rows };
+} */
+
 /**
 * initialize search engine
 * @param {Object} config
@@ -80,23 +93,14 @@ const Pagination = (query, result) => {
    {Array} display_fields
  * @return {Promise} resolved once table is describe()'d
 */
-module.exports = {
-    init: config => {
-        let
-            dbh = new Sequelize(config.db_name, config.db_user, config.db_password, {
-                host: config.db_host,
-                dialect: config.db_driver
-            }),
-            Model = dbh.define(config.db_table);
-        return Model.describe().then(cols => SearchAPI(
-          // {
-              // config:
-              config,
-              // runQuery:
-              Model.findAndCountAll.bind(Model),
-              // tableColumns:
-              Object.keys(cols)
-        // }
-        ));
-    }
+exports.init = config => {
+    let
+        dbh = new Sequelize(config.db_name, config.db_user, config.db_password, {
+            host: config.db_host,
+            dialect: config.db_driver
+        }),
+        Model = dbh.define(config.db_table),
+        runQuery = Model.findAndCountAll.bind(Model),
+        createAPI = cols => SearchAPI(config, runQuery, Object.keys(cols));
+    return Model.describe().then(createAPI);
 }
