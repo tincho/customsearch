@@ -7,25 +7,21 @@
     <meta name="description" content="">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="ROBOTS" content="NOINDEX">
-    <script type="text/javascript" src="https://cdn.rawgit.com/tincho/64645b384a23e57f326491eb4007d856/raw/9e0554a6dd3c5eb3418498e5b58356e4bd972bf1/getData.js"></script>
     <style type="text/css">
     input {
         clear: both;
         display: block;
     }
-    #debug {
-        width: 100%;
-        overflow: scroll;
-    }
-    #debug pre {
-        word-wrap: break-word;
+    #result ul {
+      list-style: none;
     }
     </style>
+    <link rel="stylesheet" href="https://cdn.rawgit.com/summerstyle/jsonTreeViewer/e8798ecd/libs/jsonTree/jsonTree.css">
 </head>
 
 <body>
     <div class="container">
-        <form id="searchForm" method="get" action="/search">
+        <form id="searchForm" method="get" action="../search">
             <input type="text" name="q" placeholder="Search...">
 
             <div class="btn-group" data-toggle="buttons">
@@ -40,23 +36,45 @@
               </label>
             </div>
             <button type="submit">Search!</button>
-        </form>
 
-        <div id="debug">
-            <pre></pre>
-        </div>
+            <input type="hidden" name="previousPage">
+            <input type="hidden" name="nextPage">
+            <input type="hidden" name="limit">
+        </form>
+        <hr>
+        <div id="result"></div>
     </div>
 </body>
+
+<script type="text/javascript" src="https://cdn.rawgit.com/tincho/64645b384a23e57f326491eb4007d856/raw/9e0554a6dd3c5eb3418498e5b58356e4bd972bf1/getData.js"></script>
+<script src="https://cdn.rawgit.com/summerstyle/jsonTreeViewer/e8798ecd/libs/jsonTree/jsonTree.js" charset="utf-8"></script>
 <script type="text/javascript">
 var $ = document.querySelector.bind(document);
-$("#searchForm").addEventListener("submit", function(evt) {
+var $form   = $("#searchForm"),
+    $result = $("#result");
+
+// _.flow(_.property("responseText"), JSON.parse, showData)
+window.onload = getData.bind(document, $form.action + '?limit=10', showData);
+
+$form.addEventListener("submit", function(evt) {
     evt.preventDefault();
     var q = $("input[name=q]").value;
     var type = $("input[name=type]:checked").value;
-    getData(this.action + '?q=' + q + '&type=' + type, function(data) {
-        $("#debug pre").innerText = data.responseText;
-    });
+    getData(this.action + '?q=' + q + '&type=' + type, showData);
     return false;
-})
+});
+
+function showData(res) {
+  try {
+    var
+      data = JSON.parse(res.responseText),
+      links = typeof data._links === "object" ? data._links : {};
+    if (links.next) $form.elements.nextPage.value = links.next;
+    if (links.previous) $form.elements.previousPage.value = links.prev;
+    jsonTree.create(data, $result);
+  } catch (e) {
+
+  }
+}
 </script>
 </html>
