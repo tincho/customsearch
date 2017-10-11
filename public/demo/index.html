@@ -49,6 +49,7 @@
 <script type="text/javascript" src="https://cdn.rawgit.com/tincho/64645b384a23e57f326491eb4007d856/raw/9e0554a6dd3c5eb3418498e5b58356e4bd972bf1/getData.js"></script>
 <script src="https://cdn.rawgit.com/summerstyle/jsonTreeViewer/e8798ecd/libs/jsonTree/jsonTree.js" charset="utf-8"></script>
 <script type="text/javascript">
+
 var $ = document.querySelector.bind(document);
 var $form   = $("#searchForm"),
     $result = $("#result");
@@ -65,16 +66,16 @@ $form.addEventListener("submit", function(evt) {
 });
 
 function showData(res) {
-  try {
-    var
-      data = JSON.parse(res.responseText),
-      links = typeof data._links === "object" ? data._links : {};
-    if (links.next) $form.elements.nextPage.value = links.next;
-    if (links.previous) $form.elements.previousPage.value = links.prev;
-    jsonTree.create(data, $result);
-  } catch (e) {
+    try {
+        var
+          data = JSON.parse(res.responseText),
+          links = typeof data._links === "object" ? data._links : {};
+        if (links.next) $form.elements.nextPage.value = links.next;
+        if (links.previous) $form.elements.previousPage.value = links.prev;
+        jsonTree.create(data, $result);
+    } catch (e) {
 
-  }
+    }
 }
 </script>
 </html>

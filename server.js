@@ -21,22 +21,29 @@ var _          = require('sequelize').Utils._;
 var API_ROOT = process.env.API_ROOT || '';
 var app = express();
 
-Search.init(config).then(function(search) {
+var APIready = Search.init(config);
+APIready.then(function() {
     console.log("Config ready");
+});
 
-    app.use("/", express.static("./public"));
-
-    app.get(API_ROOT + "/search", (req, res) => {
-        res.type('json');
+app.use("/", express.static("./public"));
+app.get(API_ROOT + "/search", (req, res) => {
+    APIready.then(search => {
+        //console.log(search);
         search.get_search(req.query).then(function(result) {
+            res.type('json');
             result.limit = parseInt(req.query.limit);
             result.offset = parseInt(req.query.offset);
             let response = JSON.stringify(result, utf8decode);
             res.send(response);
-        });
+          });
     });
-    app.get(API_ROOT + "/columns", (req, res) => res.json(search.get_columns()));
-    app.get(API_ROOT + "/columns/selected", (req, res) => res.json(search.get_columns_selected()));
+});
+app.get(API_ROOT + "/columns", (req, res) => {
+    APIready.then(search => res.json(search.get_columns()));
+});
+app.get(API_ROOT + "/columns/selected", (req, res) => {
+    APIready.then(search => res.json(search.get_columns_selected()));
 });
 
 var PORT = process.env.PORT || 3000;
