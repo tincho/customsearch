@@ -15,39 +15,48 @@ var bodyParser = require('body-parser');
 var config     = require('./config');
 var Search     = require('./search');
 var utf8       = require('utf8');
-var _          = require('sequelize').Utils._;
 
-
+// this might come from config ?
 var API_ROOT = process.env.API_ROOT || '';
 var app = express();
+app.use("/", express.static("./public"));
 
-Search.init(config).then(function(search) {
+var APIready = Search.init(config);
+APIready.then(function() {
     console.log("Config ready");
+});
 
-    app.use("/", express.static("./public"));
-
-    app.get(API_ROOT + "/search", (req, res) => {
-        res.type('json');
-        search.get_search(req.query).then(function(result) {
-            result.limit = parseInt(req.query.limit);
-            result.offset = parseInt(req.query.offset);
+// all table columns... should be private??
+app.get(API_ROOT + "/columns", (req, res) => {
+    APIready.then(API => res.json(API.get_columns()));
+});
+// columns that will be visible to frontend result
+app.get(API_ROOT + "/columns/selected", (req, res) => {
+    APIready.then(API => res.json(API.get_columns_selected()));
+});
+// search itself
+app.get(API_ROOT + "/search", (req, res) => {
+    APIready.then(API => {
+        //console.log(search);
+        API.get_search(req.query).then(function(result) {
+            res.type('json');
             let response = JSON.stringify(result, utf8decode);
             res.send(response);
-        });
+          });
     });
-    app.get(API_ROOT + "/columns", (req, res) => res.json(search.get_columns()));
-    app.get(API_ROOT + "/columns/selected", (req, res) => res.json(search.get_columns_selected()));
 
-    // @Authorize
-    app.get(API_ROOT + "/configure", (req, res) => {
-      var
-        config_keys   = [ "db_table", "search_fields", "display_fields", "default_order" ],
-        config_public = _.pick(config, config_keys);
-      res.json(config_public)
+// config
+// @Authorize
+app.get(API_ROOT + "/configure", (req, res) => {
+    APIready.then(API => {
+        var
+          config_keys   = [ "db_table", "search_fields", "display_fields", "default_order" ],
+          config_public = _.pick(config, config_keys);
+        res.json(config_public)
     });
 });
 
-var PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3000;
 console.log("Listening on http://localhost:" + PORT);
 console.log("API Root: " + API_ROOT);
 app.listen(PORT);
