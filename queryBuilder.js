@@ -14,7 +14,7 @@ module.exports = QueryBuilder;
  */
 function QueryBuilder(query, fields) {
     var queryDefaults = {
-        q: undefined, // the search term(s)
+        q: '', // the search term(s)
         type: 'any',
         // 'any' match any of the specified words. DEFAULT OPTION
         // 'all' : match each and every word but may be separate
