@@ -42,7 +42,7 @@ app.get(API_ROOT + "/search", (req, res) => {
             res.type('json');
             let response = JSON.stringify(result, utf8decode);
             res.send(response);
-          });
+        });
     });
 
 // config
