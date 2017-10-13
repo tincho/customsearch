@@ -24,6 +24,7 @@ const SearchAPI = (config, runQuery, tableColumns) => {
       toMatch: existingFields(config.search_fields),
       toSelect: existingFields(config.display_fields)
   };
+  const Where = _.partial(BuildWhere, fields.toMatch);
 
   config.default_limit = 20;
   return {
@@ -37,7 +38,7 @@ const SearchAPI = (config, runQuery, tableColumns) => {
           let query = Object.assign({
               attributes: fields.toSelect,
               raw: true
-          }, BuildQuery(params, _.partial(BuildWhere, fields.toMatch)));
+          }, BuildQuery(params));
           return runQuery(query).then(result => {
               // @TODO obtain postProcesses from outer world ?
               let postProcess = [ Pagination ];
@@ -50,7 +51,7 @@ const SearchAPI = (config, runQuery, tableColumns) => {
       }
   };
 
-  function BuildQuery(params, Where) {
+  function BuildQuery(params) {
     let query = {
         offset: ~~params.limit * Math.max(~~params.page -1, 0),
         limit: parseInt(params.limit)
