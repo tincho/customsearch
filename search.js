@@ -30,16 +30,14 @@ const SearchAPI = (config, runQuery, tableColumns) => {
       get_columns: () => tableColumns,
       get_columns_selected: () => fields.toSelect,
       get_search: params => {
-          // console.log(params);
-          let defaults = {
+          params = Object.assign({
+            page: 1,
+            limit: config.default_limit
+          }, params);
+          let query = Object.assign({
               attributes: fields.toSelect,
-              limit: config.default_limit,
               raw: true
-          },
-          query = Object.assign({},
-              defaults,
-              BuildQuery(params, _.partial(BuildWhere, fields.toMatch))
-          );
+          }, BuildQuery(params, _.partial(BuildWhere, fields.toMatch)));
           return runQuery(query).then(result => {
               // @TODO obtain postProcesses from outer world ?
               let postProcess = [ Pagination ];
@@ -53,8 +51,10 @@ const SearchAPI = (config, runQuery, tableColumns) => {
   };
 
   function BuildQuery(params, Where) {
-
-    let query = {};
+    let query = {
+        offset: ~~params.limit * Math.max(~~params.page -1, 0),
+        limit: parseInt(params.limit)
+    };
 
     if (typeof params.q === 'string' && params.q !== '') {
         let
@@ -64,14 +64,6 @@ const SearchAPI = (config, runQuery, tableColumns) => {
             ? [q]
             : q.replace(/\s+/g, ' ').split(' ');
         query.where = Where(type, terms);
-    }
-
-    // user should provide: limit, page . NO offset
-    if (params.page > 0) {
-        query.offset = ~~params.limit * Math.max(~~params.page -1, 0);
-    }
-    if (params.limit) {
-        query.limit = parseInt(params.limit);
     }
 
     if (typeof params.order === 'string') {
@@ -95,7 +87,8 @@ const SearchAPI = (config, runQuery, tableColumns) => {
 //  Post-Query
 const Pagination = (query, result) => {
     let currentPage = 1 + ~~Math.ceil(query.offset / query.limit),
-        totalPages  = Math.floor(result.count / query.limit) + 1;
+        pageFix = (~~query.limit === 1) ? 0 : 1,
+        totalPages  = Math.floor(result.count / query.limit) + pageFix;
     const prevTo = page => (currentPage > 1) ? Math.min(currentPage - 1, totalPages) : null;
     const nextTo = page => (currentPage < totalPages) ? currentPage + 1 : null;
     return {
