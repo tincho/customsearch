@@ -11,7 +11,6 @@
 'use strict';
 
 var express    = require("express");
-var bodyParser = require('body-parser');
 var config     = require('./config');
 var Search     = require('./search');
 var utf8       = require('utf8');
