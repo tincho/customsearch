@@ -18,6 +18,7 @@ const _ = Sequelize.Utils._;
 const intersectionOrAll = (all, items) => (items === '*') ? all : _.intersection(all, items);
 
 const SearchAPI = (config, runQuery, tableColumns) => {
+  config.default_limit = 20;
   // ensure not querying unexisting columns:
   const existingFields = _.partial(intersectionOrAll, tableColumns);
   let fields = {
@@ -26,29 +27,31 @@ const SearchAPI = (config, runQuery, tableColumns) => {
   };
   const Where = _.partial(BuildWhere, fields.toMatch);
 
-  config.default_limit = 20;
+  exports.existingFields = existingFields;
+  exports.parseOrder = ParseOrder;
+
   return {
-      get_columns: () => tableColumns,
-      get_columns_selected: () => fields.toSelect,
-      get_search: params => {
-          params = Object.assign({
-            page: 1,
-            limit: config.default_limit
-          }, params);
-          let query = Object.assign({
-              attributes: fields.toSelect,
-              raw: true
-          }, BuildQuery(params));
-          return runQuery(query).then(result => {
-              // @TODO obtain postProcesses from outer world ?
-              let postProcess = [ Pagination ];
-              // @TODO query and result should be passed as clones so postProcessors cant mutate them
-              let augments = postProcess.map(fn => fn(query, result));
-              // @TODO use ES6:
-              // return Object.assign(result, ...augments);
-              return Object.assign.apply({}, [result].concat(augments))
-          });
-      }
+    get_columns: () => tableColumns,
+    get_columns_selected: () => fields.toSelect,
+    get_search: params => {
+        params = Object.assign({
+          page: 1,
+          limit: config.default_limit
+        }, params);
+        let query = Object.assign({
+          attributes: fields.toSelect,
+          raw: true
+        }, BuildQuery(params));
+        return runQuery(query).then(result => {
+          // @TODO obtain postProcesses from outer world ?
+          let postProcess = [ Pagination ];
+          // @TODO query and result should be passed as clones so postProcessors cant mutate them
+          let augments = postProcess.map(fn => fn(query, result));
+          // @TODO use ES6:
+          // return Object.assign(result, ...augments);
+          return Object.assign.apply({}, [result].concat(augments))
+      });
+    }
   };
 
   function BuildQuery(params) {
@@ -68,24 +71,38 @@ const SearchAPI = (config, runQuery, tableColumns) => {
     }
 
     if (typeof params.order === 'string') {
-        // @TODO handle order as:
-        // &order[0]=field1 &direction[0]=desc &order[1]=field2 &direction[1]=asc
-        let
-            order = params.order,
-            direction = _.get(order.match(/ASC|DESC/), 0, ""),
-            orderFields = order.replace(/ASC|DESC/,'').trim().split(","),
-            existingOrderFields = existingFields(orderFields);
         // this is to ensure no unexisting field gets passed as ORDER BY
-        query.order = existingOrderFields.length
-          ? existingOrderFields.join(", ") + " " + direction
-          : config.default_order;
+        let order = ParseOrder(params.order)
+        query.order = order.length ? order : config.default_order;
     }
     return query;
-  };
+  }
 
+  /**
+  * gets a string like "field1 ASC, field2, field3 DESC, field4"
+  * and removes fields which are not in the table
+  */
+  function ParseOrder(order) {
+    // @TODO handle order as:
+    // &order[0]=field1 &direction[0]=desc &order[1]=field2 &direction[1]=asc
+    let
+      stmnts = order.match(/(\w+( (ASC|DESC))?)+/g),
+      orderFields = stmnts.reduce((previous, current) => {
+        let
+          direction = _.get(current.match(/ASC|DESC/), 0, ""),
+          field = current.replace(/ASC|DESC|\s/g, '');
+        return Object.assign(previous, { [field]: direction })
+      }, {}),
+      existing = _.pickBy(orderFields, (d, field) => _.includes(tableColumns, field));
+    return _.reduce(existing, (arr, direction, field) => {
+      arr.push((field + " " + direction).trim());
+      return arr
+    }, []).join(", ")
+  }
 };
 
 //  Post-Query
+// @TODO use ES6 way: const Pagination = (query, {count}) => {}
 const Pagination = (query, result) => {
     let currentPage = 1 + ~~Math.ceil(query.offset / query.limit),
         pageFix = (~~query.limit === 1) ? 0 : 1,
