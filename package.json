@@ -2,6 +2,7 @@
   "name": "customsearch",
   "version": "0.0.14",
   "dependencies": {
+    "body-parser": "^1.18.2",
     "express": "^4.10.6",
     "mysql": "^2.5.4",
     "readline-sync": "^1.4.5",
@@ -9,8 +10,8 @@
     "utf8": "^2.1.2"
   },
   "scripts": {
-      "start": "node server.js",
-      "postinstall": "node configure.js",
-      "dev": "if [ -x \"$(command -v nodemon)\" ]; then nodemon server.js; else  echo 'Better with NodeMon! npm install -g nodemon'; node server.js; fi"
+    "start": "node server.js",
+    "postinstall": "node configure.js",
+    "dev": "if [ -x \"$(command -v nodemon)\" ]; then nodemon server.js; else  echo 'Better with NodeMon! npm install -g nodemon'; node server.js; fi"
   }
 }
